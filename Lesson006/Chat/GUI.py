@@ -1,8 +1,9 @@
+import os.path
 from tkinter import *
 
 
-# from threading import Thread
-# from net_process import network
+from threading import Thread
+from net_process import network
 
 
 class chat:
@@ -21,8 +22,14 @@ class chat:
 
     def __update_chat(self):
         if self.server:
-            with open('messages.txt', 'r', encoding='utf-8') as file:
-                self.messages = file.readlines()
+            if not os.path.exists('messages.txt'):
+                with open('messages.txt', 'w', encoding='utf-8') as file:
+                    file.writelines(self.messages)
+            if self.server:
+                with open('messages.txt', 'r', encoding='utf-8') as file:
+                    self.messages = file.readlines()
+        else:
+            pass
         value = Variable(value=self.messages)
         self.chat_box.config(listvariable=value)
         self.chat_box.after(500, self.__update_chat)
@@ -34,6 +41,8 @@ class chat:
                 with open('messages.txt', 'a', encoding='utf-8') as file:
                     file.write(f'{self.user_name}: {text}\n')
                 self.message.delete(0, 'end')
+        else:
+            pass
 
     def main_window(self):
         self.root = Tk()
@@ -54,19 +63,26 @@ class chat:
         self.send_btn.bind('<ButtonPress-1>', self.__send_message)
         self.send_btn.grid(row=1, column=1, padx=10)
         self.message_frame.pack()
-        self.root.mainloop()
+        if self.user_name:
+            self.root.mainloop()
+        if self.server:
+            os.remove('./messages.txt')
+            self.nw.server_run = False
 
-    # def __server_process(self):
-    #     nw = network(self)
-    #     nw.server_start()
+    def __server_process(self):
+        self.nw = network(self.server)
+        self.nw.server_start()
 
     def __start_chat(self, svr):
         self.user_name = self.name_entry.get()
         self.server = svr.get()
+        self.ip_address = self.ip_address_entry.get()
         self.inwindow.destroy()
-        # self.ip_address = self.ip_address_entry.get()
-        # if self.server:
-        #     Thread(target=self.__server_process)
+        if self.server:
+            self.serv_thread = Thread(target=self.__server_process)
+            self.serv_thread.start()
+        else:
+            self.nw = network(self.server, self.ip_address)
 
     def __autorisating(self):
         self.inwindow = Tk()
@@ -76,8 +92,8 @@ class chat:
         self.name_entry = Entry(master=self.inwindow, width=20)
         self.name_entry.pack(anchor='nw', padx=5)
         server = IntVar()
-        self.server_checkbatton = Checkbutton(text='Стать сервером', variable=server)
-        self.server_checkbatton.pack(anchor='nw')
+        self.server_checkbutton = Checkbutton(text='Стать сервером', variable=server)
+        self.server_checkbutton.pack(anchor='nw')
         self.ip_address_entry = Entry(master=self.inwindow, width=20)
         self.ip_address_entry.pack(anchor='nw', padx=5)
         self.start_chat_button = Button(text='Начать чат', command=lambda: self.__start_chat(server))
