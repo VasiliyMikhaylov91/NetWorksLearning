@@ -1,10 +1,15 @@
 from tkinter import *
 
 
+# from threading import Thread
+# from net_process import network
+
+
 class chat:
     def __init__(self):
         self.server = None
         self.user_name = None
+        self.ip_address = None
         self.messages = []
         self.send_btn = None
         self.message = None
@@ -15,6 +20,9 @@ class chat:
         self.__autorisating()
 
     def __update_chat(self):
+        if self.server:
+            with open('messages.txt', 'r', encoding='utf-8') as file:
+                self.messages = file.readlines()
         value = Variable(value=self.messages)
         self.chat_box.config(listvariable=value)
         self.chat_box.after(500, self.__update_chat)
@@ -23,7 +31,8 @@ class chat:
         if self.server:
             text = self.message.get()
             if text:
-                self.messages.append(self.user_name + ': ' + text)
+                with open('messages.txt', 'a', encoding='utf-8') as file:
+                    file.write(f'{self.user_name}: {text}\n')
                 self.message.delete(0, 'end')
 
     def main_window(self):
@@ -47,10 +56,17 @@ class chat:
         self.message_frame.pack()
         self.root.mainloop()
 
+    # def __server_process(self):
+    #     nw = network(self)
+    #     nw.server_start()
+
     def __start_chat(self, svr):
         self.user_name = self.name_entry.get()
         self.server = svr.get()
         self.inwindow.destroy()
+        # self.ip_address = self.ip_address_entry.get()
+        # if self.server:
+        #     Thread(target=self.__server_process)
 
     def __autorisating(self):
         self.inwindow = Tk()
@@ -62,6 +78,8 @@ class chat:
         server = IntVar()
         self.server_checkbatton = Checkbutton(text='Стать сервером', variable=server)
         self.server_checkbatton.pack(anchor='nw')
+        self.ip_address_entry = Entry(master=self.inwindow, width=20)
+        self.ip_address_entry.pack(anchor='nw', padx=5)
         self.start_chat_button = Button(text='Начать чат', command=lambda: self.__start_chat(server))
         self.start_chat_button.pack(anchor='center')
         self.inwindow.mainloop()
@@ -69,4 +87,5 @@ class chat:
 
 if __name__ == "__main__":
     chat_1 = chat()
-    chat_1.main_window()
+    if chat_1.user_name:
+        chat_1.main_window()

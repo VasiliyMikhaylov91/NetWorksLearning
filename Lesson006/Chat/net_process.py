@@ -1,17 +1,22 @@
 import socket
+from GUI import chat
 
 
 class network:
-    def __init__(self, server: bool = True, server_address: str = ''):
-        self.server_address = server_address
-        self.server = server
-        if server:
-            self.__server_init()
-        else:
-            self.__client_init()
+    def __init__(self, GUI: chat):
+        self.server_address = GUI.ip_address
+        self.server = GUI.server
 
-    def __server_init(self):
-        pass
+    def server_start(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((self.server_address, 5000))
+            s.listen()
+            while True:
+                conn, addr = s.accept()
+                with conn:
+                    data = conn.recv(1)
+                    if data == 'r':
+                        pass
 
     def __client_init(self):
         pass
