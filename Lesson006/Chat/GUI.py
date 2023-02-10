@@ -1,7 +1,6 @@
 import os.path
 from tkinter import *
 
-
 from threading import Thread
 from net_process import network
 
@@ -29,7 +28,8 @@ class chat:
                 with open('messages.txt', 'r', encoding='utf-8') as file:
                     self.messages = file.readlines()
         else:
-            pass
+            nw = network(self.server, self.ip_address)
+            self.messages = nw.client_read_chat().split('\n')
         value = Variable(value=self.messages)
         self.chat_box.config(listvariable=value)
         self.chat_box.after(500, self.__update_chat)
@@ -40,13 +40,14 @@ class chat:
             if text:
                 with open('messages.txt', 'a', encoding='utf-8') as file:
                     file.write(f'{self.user_name}: {text}\n')
-                self.message.delete(0, 'end')
         else:
-            pass
+            nw = network(self.server, self.ip_address)
+            nw.client_send_message(f'{self.user_name}: {self.message.get()}\n')
+        self.message.delete(0, 'end')
 
     def main_window(self):
         self.root = Tk()
-        self.root.title('Chat client')
+        self.root.title(f'{self.user_name} chat')
         self.root.geometry('500x560')
         self.root.resizable(False, False)
         self.chat_frame = Frame(self.root, height=30, width=80)
@@ -81,8 +82,6 @@ class chat:
         if self.server:
             self.serv_thread = Thread(target=self.__server_process)
             self.serv_thread.start()
-        else:
-            self.nw = network(self.server, self.ip_address)
 
     def __autorisating(self):
         self.inwindow = Tk()
